@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control Financiero</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- SALDO -->
+    <div class="saldo-container">
+      <h2>Saldo</h2>
+      <div class="saldo-box">
+        <span id="saldo">$0</span>
+        <button id="toggleSaldo">👁</button>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button id="btnIngreso" class="active">Ingreso</button>
+      <button id="btnGasto">Gasto</button>
+    </div>
+
+    <!-- FORM -->
+    <div class="form">
+      <input type="number" id="monto" placeholder="Monto">
+      <input type="text" id="descripcion" placeholder="Descripción">
+      <div class="botones">
+        <button id="guardar">Guardar</button>
+        <button id="cancelar">Cancelar</button>
+      </div>
+    </div>
+
+    <!-- MOVIMIENTOS -->
+    <div class="movimientos-container">
+      <h3>Movimientos</h3>
+      <div id="listaMovimientos"></div>
+    </div>
+
+    <!-- EXPORTAR -->
+    <div class="exportar">
+      <button id="exportarExcel">Exportar Año</button>
+    </div>
+
+  </div>
+
+  <!-- Librería Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+  <script src="app.js"></script>
+</body>
+</html>
