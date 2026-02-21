@@ -1,0 +1,115 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #111;
+  color: white;
+}
+
+.container {
+  padding: 15px;
+}
+
+.saldo-container {
+  text-align: center;
+}
+
+.saldo-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  font-size: 24px;
+  margin-bottom: 15px;
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.tabs button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: #333;
+  color: white;
+  border-radius: 6px;
+}
+
+.tabs .active {
+  background: #4CAF50;
+}
+
+.form input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  border: none;
+}
+
+.botones {
+  display: flex;
+  gap: 10px;
+}
+
+.botones button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+}
+
+#guardar {
+  background: #4CAF50;
+  color: white;
+}
+
+#cancelar {
+  background: #777;
+  color: white;
+}
+
+.movimientos-container {
+  margin-top: 15px;
+  max-height: 40vh;
+  overflow-y: auto;
+  border-top: 1px solid #333;
+  padding-top: 10px;
+}
+
+.movimiento {
+  background: #222;
+  padding: 8px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.movimiento span {
+  font-size: 14px;
+}
+
+.movimiento button {
+  margin-left: 5px;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 6px;
+}
+
+.exportar {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.exportar button {
+  padding: 10px;
+  width: 100%;
+  border-radius: 6px;
+  border: none;
+  background: #2196F3;
+  color: white;
+}
