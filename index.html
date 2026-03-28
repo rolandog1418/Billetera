@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Billetera Rápida ⚡</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="theme-color" content="#3b82f6">
+    
+    <!-- Precarga de recursos críticos -->
+    <link rel="preload" href="icon-192.png" as="image">
+    <link rel="preload" href="icon-512.png" as="image">
+    
+    <style>
+        /* Tus estilos existentes + optimización de carga */
+        :root {
+            --bg-color: #f4f6f8;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --primary: #3b82f6;
+            --income: #10b981;
+            --expense: #ef4444;
+            --border: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 16px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #111827;
+                --card-bg: #1f2937;
+                --text-main: #f9fafb;
+                --text-muted: #9ca3af;
+                --border: #374151;
+            }
+        }
+
+        /* Optimización de renderizado */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        
+        body { 
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            line-height: 1.5; 
+            padding-bottom: 80px;
+            opacity: 1;
+            transition: opacity 0.2s ease;
+        }
+        
+        /* Indicador de carga instantáneo (opcional) */
+        .app-ready { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            right: 0; 
+            height: 3px; 
+            background: var(--primary); 
+            transform: scaleX(0); 
+            transform-origin: left; 
+            animation: loading 0.3s ease-out forwards;
+            z-index: 2000;
+        }
+        
+        @keyframes loading {
+            0% { transform: scaleX(0); }
+            100% { transform: scaleX(1); }
+        }
+        
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        header h1 { font-size: 1.5rem; }
+        
+        .undo-btn { background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: var(--shadow); opacity: 0.5; pointer-events: none; transition: 0.2s; }
+        .undo-btn.active { opacity: 1; pointer-events: auto; color: var(--primary); border-color: var(--primary); }
+
+        .dashboard { background: var(--card-bg); padding: 20px; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; text-align: center; }
+        .dashboard h2 { font-size: 2.5rem; margin: 10px 0; font-weight: 700; }
+        .stats { display: flex; justify-content: space-between; margin-top: 15px; border-top: 1px solid var(--border); padding-top: 15px; }
+        .stat-item { width: 48%; }
+        .stat-item span { display: block; font-size: 0.85rem; color: var(--text-muted); }
+        .stat-item strong { font-size: 1.2rem; }
+        .text-income { color: var(--income); }
+        .text-expense { color: var(--expense); }
+
+        .form-card { background: var(--card-bg); padding: 20px; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-row { display: flex; gap: 10px; }
+        .form-row .form-group { flex: 1; }
+        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-color); color: var(--text-main); font-size: 1rem; outline: none; }
+        input:focus, select:focus { border-color: var(--primary); }
+        
+        .btn-submit { width: 100%; padding: 12px; border: none; border-radius: 8px; background: var(--primary); color: white; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-submit:active { transform: scale(0.98); }
+
+        .filters { display: flex; gap: 10px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; flex-wrap: wrap; }
+        .filter-btn { padding: 8px 16px; border: none; border-radius: 20px; background: var(--card-bg); color: var(--text-muted); font-size: 0.9rem; cursor: pointer; white-space: nowrap; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .filter-btn.active { background: var(--primary); color: white; }
+        .category-filter { flex: 1; min-width: 150px; }
+
+        .transaction-list { list-style: none; }
+        .transaction-item { background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); animation: slideIn 0.3s ease-out; }
+        .tx-info { display: flex; flex-direction: column; }
+        .tx-desc { font-weight: 600; font-size: 1.05rem; }
+        .tx-date { font-size: 0.8rem; color: var(--text-muted); }
+        .tx-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+        .tx-amount { font-weight: 700; font-size: 1.1rem; }
+        .tx-actions { display: flex; gap: 8px; }
+        .btn-icon { background: none; border: none; cursor: pointer; font-size: 1.2rem; opacity: 0.6; transition: 0.2s; }
+        .btn-icon:hover { opacity: 1; }
+
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--text-main); color: var(--bg-color); padding: 10px 20px; border-radius: 30px; font-size: 0.9rem; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); opacity: 0; z-index: 1000; }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<!-- Indicador de que la app está lista (desaparece rápidamente) -->
+<div class="app-ready"></div>
+
+<div class="container">
+    <header>
+        <h1>Billetera Rápida ⚡</h1>
+        <button id="btnUndo" class="undo-btn" onclick="undo()" title="Deshacer último cambio">
+            ↩ Deshacer
+        </button>
+    </header>
+
+    <section class="dashboard">
+        <span style="color: var(--text-muted); font-size: 0.9rem;">Balance Total</span>
+        <h2 id="totalBalance">$0</h2>
+        <div class="stats">
+            <div class="stat-item">
+                <span>Ingresos</span>
+                <strong class="text-income" id="totalIncome">+$0</strong>
+            </div>
+            <div class="stat-item">
+                <span>Gastos</span>
+                <strong class="text-expense" id="totalExpense">-$0</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="form-card">
+        <form id="txForm" onsubmit="handleFormSubmit(event)">
+            <input type="hidden" id="txId">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select id="txType">
+                        <option value="expense">Gasto</option>
+                        <option value="income">Ingreso</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Monto</label>
+                    <input type="number" id="txAmount" step="1" required placeholder="0" inputmode="numeric">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <input type="text" id="txDesc" required placeholder="Ej. Supermercado, Salario...">
+                </div>
+                <div class="form-group">
+                    <label>Fecha</label>
+                    <input type="date" id="txDate" required>
+                </div>
+            </div>
+            <button type="submit" class="btn-submit" id="submitBtn">Añadir Registro</button>
+        </form>
+    </section>
+
+    <section>
+        <div class="filters" id="filters">
+            <button class="filter-btn active" onclick="setFilter('all')">Todos</button>
+            <button class="filter-btn" onclick="setFilter('day')">Hoy</button>
+            <button class="filter-btn" onclick="setFilter('week')">Esta Semana</button>
+            <button class="filter-btn" onclick="setFilter('month')">Este Mes</button>
+            <select id="categoryFilterSelect" class="filter-btn category-filter" onchange="setCategoryFilter()">
+                <option value="all">Todas las categorías</option>
+            </select>
+        </div>
+        <ul class="transaction-list" id="txList">
+            </ul>
+    </section>
+</div>
+
+<div class="toast" id="toast">Acción realizada</div>
+
+<script>
+    // --- ESTADO Y ALMACENAMIENTO ---
+    let transactions = JSON.parse(localStorage.getItem('br_data')) || [];
+    let historyStack = [];
+    let currentFilter = 'all';
+    let currentCategoryFilter = 'all';
+
+    // --- FUNCIÓN PARA OBTENER FECHA DE ARGENTINA ---
+    function getTodayArgentinaDate() {
+        const date = new Date();
+        date.setTime(date.getTime() - (date.getTimezoneOffset() * 60 * 1000) - (3 * 60 * 60 * 1000));
+        return date.toISOString().split('T')[0];
+    }
+
+    // Establecer fecha de hoy por defecto
+    document.getElementById('txDate').value = getTodayArgentinaDate();
+
+    // --- FUNCIONES DE FORMATEO ---
+    function formatNumberWithDots(number) {
+        return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+
+    // --- FUNCIONES NÚCLEO ---
+    function saveState() {
+        historyStack.push(JSON.stringify(transactions));
+        if (historyStack.length > 10) historyStack.shift();
+        updateUndoButton();
+    }
+
+    function updateStorage() {
+        localStorage.setItem('br_data', JSON.stringify(transactions));
+        renderUI();
+    }
+
+    function undo() {
+        if (historyStack.length === 0) return;
+        let previousState = historyStack.pop();
+        transactions = JSON.parse(previousState);
+        localStorage.setItem('br_data', JSON.stringify(transactions));
+        updateUndoButton();
+        renderUI();
+        showToast("Cambio revertido ↩");
+        resetForm();
+    }
+
+    function updateUndoButton() {
+        const btn = document.getElementById('btnUndo');
+        btn.classList.toggle('active', historyStack.length > 0);
+    }
+
+    // --- LÓGICA DE FORMULARIO ---
+    function handleFormSubmit(e) {
+        e.preventDefault();
+        saveState();
+
+        const idField = document.getElementById('txId').value;
+        const type = document.getElementById('txType').value;
+        const amount = Math.round(parseFloat(document.getElementById('txAmount').value));
+        const desc = document.getElementById('txDesc').value.trim();
+        const date = document.getElementById('txDate').value;
+
+        if (isNaN(amount) || amount <= 0) {
+            showToast("Ingresa un monto válido mayor a 0");
+            return;
+        }
+        if (desc === "") {
+            showToast("Ingresa una descripción");
+            return;
+        }
+
+        const txData = { id: idField ? parseInt(idField) : Date.now(), type, amount, desc, date };
+
+        if (idField) {
+            const index = transactions.findIndex(t => t.id === parseInt(idField));
+            transactions[index] = txData;
+            showToast("Registro actualizado ✏️");
+        } else {
+            transactions.push(txData);
+            transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+            showToast("Registro añadido ✅");
+        }
+
+        updateStorage();
+        resetForm();
+        updateCategoryFilterOptions();
+    }
+
+    function editTransaction(id) {
+        const tx = transactions.find(t => t.id === id);
+        if (!tx) return;
+        
+        document.getElementById('txId').value = tx.id;
+        document.getElementById('txType').value = tx.type;
+        document.getElementById('txAmount').value = tx.amount;
+        document.getElementById('txDesc').value = tx.desc;
+        document.getElementById('txDate').value = tx.date;
+        
+        document.getElementById('submitBtn').textContent = "Actualizar Registro";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function deleteTransaction(id) {
+        if(confirm("¿Seguro que deseas eliminar este registro?")) {
+            saveState();
+            transactions = transactions.filter(t => t.id !== id);
+            updateStorage();
+            showToast("Registro eliminado 🗑️");
+            updateCategoryFilterOptions();
+        }
+    }
+
+    function resetForm() {
+        document.getElementById('txForm').reset();
+        document.getElementById('txId').value = '';
+        document.getElementById('txDate').value = getTodayArgentinaDate();
+        document.getElementById('submitBtn').textContent = "Añadir Registro";
+    }
+
+    // --- FILTROS ---
+    function setFilter(filter) {
+        currentFilter = filter;
+        document.querySelectorAll('.filter-btn:not(#categoryFilterSelect)').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        renderUI();
+    }
+
+    function setCategoryFilter() {
+        currentCategoryFilter = document.getElementById('categoryFilterSelect').value;
+        renderUI();
+    }
+
+    function updateCategoryFilterOptions() {
+        const select = document.getElementById('categoryFilterSelect');
+        const currentValue = select.value;
+        const categories = ['all', ...new Set(transactions.map(t => t.desc))];
+        
+        select.innerHTML = categories.map(cat => 
+            `<option value="${cat}" ${cat === currentValue ? 'selected' : ''}>${cat === 'all' ? 'Todas las categorías' : cat}</option>`
+        ).join('');
+    }
+
+    // --- LÓGICA DE FILTRADO ---
+    function isDateInFilter(txDate, filter) {
+        const txDateObj = new Date(txDate + 'T12:00:00');
+
+        if (filter === 'all') return true;
+
+        const todayArgentinaStr = getTodayArgentinaDate();
+        const todayArgentinaObj = new Date(todayArgentinaStr + 'T12:00:00');
+
+        if (filter === 'day') {
+            return txDate === todayArgentinaStr;
+        }
+
+        if (filter === 'week') {
+            const dayOfWeek = todayArgentinaObj.getDay();
+            const diffToMonday = (dayOfWeek === 0) ? 6 : dayOfWeek - 1;
+            const monday = new Date(todayArgentinaObj);
+            monday.setDate(todayArgentinaObj.getDate() - diffToMonday);
+            monday.setHours(12, 0, 0, 0);
+
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            sunday.setHours(12, 0, 0, 0);
+
+            return txDateObj >= monday && txDateObj <= sunday;
+        }
+
+        if (filter === 'month') {
+            const year = todayArgentinaObj.getFullYear();
+            const month = todayArgentinaObj.getMonth();
+            const firstDay = new Date(year, month, 1, 12, 0, 0);
+            const lastDay = new Date(year, month + 1, 0, 12, 0, 0);
+            return txDateObj >= firstDay && txDateObj <= lastDay;
+        }
+        return true;
+    }
+
+    function getFilteredTransactions() {
+        return transactions.filter(tx => {
+            const dateMatch = isDateInFilter(tx.date, currentFilter);
+            const categoryMatch = currentCategoryFilter === 'all' || tx.desc === currentCategoryFilter;
+            return dateMatch && categoryMatch;
+        });
+    }
+
+    // --- RENDERIZADO ---
+    function renderUI() {
+        const listContainer = document.getElementById('txList');
+        listContainer.innerHTML = '';
+
+        const filteredTx = getFilteredTransactions();
+        let totalInc = 0;
+        let totalExp = 0;
+
+        if(filteredTx.length === 0) {
+            listContainer.innerHTML = '<p style="text-align:center; color:var(--text-muted); margin-top:20px;">No hay registros para este período.</p>';
+        } else {
+            filteredTx.forEach(tx => {
+                const isIncome = tx.type === 'income';
+                if (isIncome) totalInc += tx.amount;
+                else totalExp += tx.amount;
+
+                const li = document.createElement('li');
+                li.className = 'transaction-item';
+                li.innerHTML = `
+                    <div class="tx-info">
+                        <span class="tx-desc">${tx.desc}</span>
+                        <span class="tx-date">${formatDate(tx.date)}</span>
+                    </div>
+                    <div class="tx-right">
+                        <span class="tx-amount ${isIncome ? 'text-income' : 'text-expense'}">
+                            ${isIncome ? '+' : '-'}$${formatNumberWithDots(tx.amount)}
+                        </span>
+                        <div class="tx-actions">
+                            <button class="btn-icon" onclick="editTransaction(${tx.id})">✏️</button>
+                            <button class="btn-icon" onclick="deleteTransaction(${tx.id})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+                listContainer.appendChild(li);
+            });
+        }
+
+        document.getElementById('totalBalance').textContent = '$' + formatNumberWithDots(totalInc - totalExp);
+        document.getElementById('totalIncome').textContent = '+$' + formatNumberWithDots(totalInc);
+        document.getElementById('totalExpense').textContent = '-$' + formatNumberWithDots(totalExp);
+    }
+
+    function formatDate(dateString) {
+        const options = { day: '2-digit', month: 'short', year: 'numeric' };
+        return new Date(dateString + 'T12:00:00').toLocaleDateString('es-ES', options);
+    }
+
+    let toastTimeout;
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    // --- REGISTRO OPTIMIZADO DEL SERVICE WORKER ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(registration => {
+                    console.log('Service Worker registrado');
+                    
+                    // Forzar activación inmediata si hay uno esperando
+                    if (registration.waiting) {
+                        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                    }
+                })
+                .catch(error => {
+                    console.log('Error al registrar Service Worker:', error);
+                });
+        });
+    }
+
+    // Inicializar app
+    updateCategoryFilterOptions();
+    renderUI();
+    
+    // Pequeña animación para indicar que la app está lista
+    setTimeout(() => {
+        document.querySelector('.app-ready').style.opacity = '0';
+    }, 300);
+</script>
+
+</body>
+</html>
